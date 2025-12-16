@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import ms from "ms";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -6,7 +7,7 @@ import logger from "../utils/logger";
 import User, { IUser } from "../models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN ?? "7d") as ms.StringValue;
 
 const passwordPattern =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
@@ -14,6 +15,17 @@ const passwordPattern =
 const signToken = (user: IUser) => {
   return jwt.sign({ id: user._id.toString(), email: user.email }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
+  });
+};
+
+const setAuthCookie = (res: Response, token: string): void => {
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: ms(JWT_EXPIRES_IN),
+    domain: undefined,
+    path: "/",
   });
 };
 
@@ -50,8 +62,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const user = await User.create({ email, passwordHash, name });
 
     const token = signToken(user);
+    setAuthCookie(res, token);
     res.status(201).json({
-      token,
       user: {
         id: user._id,
         email: user.email,
@@ -91,8 +103,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     const token = signToken(user);
+    setAuthCookie(res, token);
     res.json({
-      token,
       user: {
         id: user._id,
         email: user.email,
@@ -102,6 +114,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   } catch (err: any) {
     logger.error("Login failed", { error: err });
     res.status(500).json({ message: "Login failed", error: err.message });
+  }
+};
+
+export const logout = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+    res.json({ message: "Logged out" });
+  } catch (err: any) {
+    logger.error("Logout failed", { error: err });
+    res.status(500).json({ message: "Logout failed", error: err.message });
   }
 };
 

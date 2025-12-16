@@ -9,14 +9,18 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ): void => {
+  const cookieToken = (req as any).cookies?.token as string | undefined;
   const authHeader = req.headers.authorization;
+  const headerToken =
+    authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : undefined;
+  const token = cookieToken || headerToken;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     res.status(401).json({ message: "No token provided" });
     return;
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as {

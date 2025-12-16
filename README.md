@@ -22,6 +22,7 @@ Create a `.env` file with the following variables:
 ```
 PORT=5000                # API port
 MONGO_URI=mongodb://127.0.0.1:27017/airsquire   # MongoDB connection string
+FRONTEND_URL=http://localhost:5173              # Frontend url for cors
 JWT_SECRET=your_jwt_secret                      # Required for signing tokens
 JWT_EXPIRES_IN=7d                                # Token expiry (e.g., 7d)
 OPENAI_API_KEY=your_openai_api_key              # Optional: enable AI metadata
