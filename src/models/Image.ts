@@ -16,6 +16,7 @@ export interface IImage extends Document {
   bookmarked: boolean;
   viewCount: number;
   hash: string;
+  sharePassword: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +38,7 @@ const imageSchema = new Schema<IImage>(
     bookmarked: { type: Boolean, default: false },
     viewCount: { type: Number, default: 0 },
     hash: { type: String, required: true, unique: true },
+    sharePassword: { type: String },
   },
   { timestamps: true }
 );

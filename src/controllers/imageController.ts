@@ -235,11 +235,18 @@ export const getImageByHash = async (
 ): Promise<void> => {
   try {
     const { hash } = req.params;
+    const { sharePassword } = req.body;
 
     const image = await Image.findOne({ hash }).exec();
 
     if (!image) {
       res.status(404).json({ message: "Image not found" });
+      return;
+    }
+
+    console.log(image.sharePassword, sharePassword);
+    if (image.sharePassword != sharePassword) {
+      res.status(404).json({ message: "Password not match" });
       return;
     }
 
@@ -402,10 +409,11 @@ export const updateImageDetails = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { title, description, tags } = req.body as {
+    const { title, description, tags, sharePassword } = req.body as {
       title?: string;
       description?: string;
       tags?: string[];
+      sharePassword?: string;
     };
 
     const image = await Image.findOne({
@@ -423,6 +431,7 @@ export const updateImageDetails = async (
     image.tags = Array.isArray(tags)
       ? tags.map((tag) => tag.trim()).filter(Boolean)
       : [];
+    image.sharePassword = sharePassword;
 
     await image.save();
 

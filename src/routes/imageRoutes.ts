@@ -16,7 +16,7 @@ import { authMiddleware } from "../middleware/auth";
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get("/hash/:hash", getImageByHash);
+router.post("/hash/:hash", getImageByHash);
 
 router.use(authMiddleware);
 
